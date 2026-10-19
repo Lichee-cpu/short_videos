@@ -15,7 +15,7 @@ ini_set('display_errors', 0);
 set_time_limit(600);
 ini_set('memory_limit', '512M');
 
-require_once 'DouyinZYParser.php';
+require_once 'DouyinHomeParser.php';
 
 // ================= 配置区域 =================
 
@@ -32,7 +32,7 @@ $count = isset($_GET['count']) ? (int)$_GET['count'] : 18; // 获取数量，默
 
 try {
     // 实例化解析器
-    $parser = new DouyinParser($cookie);
+    $parser = new DouyinHomeParser($cookie);
 
     // 获取数据
     $result = $parser->getData($url, $id, $count);

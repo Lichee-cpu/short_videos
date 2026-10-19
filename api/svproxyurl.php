@@ -34,10 +34,18 @@ function main()
         exit;
     }
 
+    // 防 SSRF：仅允许公网 http/https 地址，解析结果固定连接
+    $resolve = assertPublicHttpUrl($proxyurl);
+    if ($resolve === false) {
+        http_response_code(400);
+        echo json_encode(['code' => 400, 'msg' => 'URL 不允许代理：仅支持公网 http/https 地址']);
+        exit;
+    }
+
     if ($type === 'weibo') {
-        weibo_proxy($proxyurl);
+        weibo_proxy($proxyurl, $resolve);
     } else {
-        douyin_proxy($proxyurl);
+        douyin_proxy($proxyurl, $resolve);
     }
 }
 
@@ -46,7 +54,70 @@ function getParam($params, $key, $default = null)
     return isset($params[$key]) ? trim($params[$key]) : $default;
 }
 
-function weibo_proxy($proxyurl)
+/**
+ * 可选目标域后缀白名单（后缀匹配）。留空 = 不限制公网域名。
+ * 公开部署建议填写，例如：
+ * ['douyinvod.com', 'douyinpic.com', 'snssdk.com', 'amemv.com', 'weibo.com', 'weibocdn.com', 'sinaimg.cn']
+ */
+$allowedHostSuffixes = [];
+
+/**
+ * 防 SSRF 校验：仅允许公网 http/https 地址。
+ * - 协议限定 http/https，端口限定 80/443；
+ * - 目标域名解析出的 IP 必须为公网地址（拒绝本机、内网、链路本地/云元数据等保留地址）；
+ * - 可选域名后缀白名单；
+ * - 返回 ['host','port','ip'] 供 CURLOPT_RESOLVE 固定连接，防止 DNS 重绑定绕过；不合法返回 false。
+ */
+function assertPublicHttpUrl($url)
+{
+    $parts = parse_url((string)$url);
+    if (!is_array($parts)) {
+        return false;
+    }
+
+    $scheme = strtolower($parts['scheme'] ?? '');
+    if (!in_array($scheme, ['http', 'https'], true)) {
+        return false;
+    }
+
+    $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
+    if (!in_array($port, [80, 443], true)) {
+        return false;
+    }
+
+    $host = strtolower($parts['host'] ?? '');
+    if ($host === '' || !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+        return false;
+    }
+
+    global $allowedHostSuffixes;
+    if (!empty($allowedHostSuffixes)) {
+        $allowed = false;
+        foreach ($allowedHostSuffixes as $suffix) {
+            $suffix = strtolower(trim($suffix));
+            if ($host === $suffix || substr($host, -(strlen($suffix) + 1)) === '.' . $suffix) {
+                $allowed = true;
+                break;
+            }
+        }
+        if (!$allowed) {
+            return false;
+        }
+    }
+
+    // 解析域名并拒绝私网/保留地址（含 127.0.0.1、内网段、169.254.169.254 云元数据等）
+    $ip = gethostbyname($host);
+    if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
+        return false; // 解析失败
+    }
+    if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        return false;
+    }
+
+    return ['host' => $host, 'port' => $port, 'ip' => $ip];
+}
+
+function weibo_proxy($proxyurl, $resolve)
 {
     // 1. 验证输入有效性
     if (empty($proxyurl) || !filter_var($proxyurl, FILTER_VALIDATE_URL)) {
@@ -83,10 +154,12 @@ function weibo_proxy($proxyurl)
         CURLOPT_FOLLOWLOCATION => true, // 跟随重定向
         CURLOPT_SSL_VERIFYPEER => false, // 生产环境建议开启并配置CA证书
         CURLOPT_SSL_VERIFYHOST => false, // 生产环境建议设为2
-        CURLOPT_TIMEOUT        => 1800, // 5分钟超时（视频传输需充足时间）
+        CURLOPT_TIMEOUT        => 300, // 5分钟超时（视频传输需充足时间）
         CURLOPT_CONNECTTIMEOUT => 10, // 连接超时10秒
         CURLOPT_LOW_SPEED_LIMIT => 1024, // 最低传输速度（字节/秒）
         CURLOPT_LOW_SPEED_TIME  => 30,   // 低于最低速度持续30秒则中断（避免无限等待）
+        // 防 DNS 重绑定：将校验过的域名固定到已验证的公网 IP
+        CURLOPT_RESOLVE        => ["{$resolve['host']}:{$resolve['port']}:{$resolve['ip']}"],
         // 捕获响应头
         CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
@@ -140,7 +213,7 @@ function weibo_proxy($proxyurl)
     }
 }
 
-function douyin_proxy($proxyurl)
+function douyin_proxy($proxyurl, $resolve)
 {
     if (empty($proxyurl)) {
         http_response_code(400);
@@ -188,6 +261,8 @@ function douyin_proxy($proxyurl)
         CURLOPT_SSL_VERIFYHOST => false,
         CURLOPT_TIMEOUT => 300,
         CURLOPT_CONNECTTIMEOUT => 10,
+        // 防 DNS 重绑定：将校验过的域名固定到已验证的公网 IP
+        CURLOPT_RESOLVE => ["{$resolve['host']}:{$resolve['port']}:{$resolve['ip']}"],
         CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $headerParts = explode(':', $header, 2);

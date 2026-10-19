@@ -9,6 +9,10 @@
 const DEFAULT_UA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
 
+// 详情接口专用移动端 UA：配合 api.amemv.com 免 Cookie 详情接口使用（视频/图集/实况通用）
+const MOBILE_UA =
+    "Mozilla/5.0 (Linux; Android 13; 2210132C Build/TKQ1.220829.002) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Mobile Safari/537.36";
+
 const REDIRECT_DONE_HOSTS = {
     "www.douyin.com": true,
 };
@@ -336,136 +340,61 @@ function getVideoId(url) {
 }
 
 async function fetchAwemeDetail(awemeId) {
-    const refererBase = `https://www.douyin.com/video/${awemeId}`;
-
-    await httpGet(`${refererBase}?previous_page=web_code_link`, defaultBrowserHeaders(`${refererBase}?previous_page=web_code_link`)).catch(
-        () => null
-    );
-
-    let lastFailureHint = "";
-
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-        let ttwid = await getTtwid();
-        if (!ttwid) {
-            ttwid =
-                "1%7CvDWCB8tYdKPbdOlqwNTkDPhizBaV9i91KjYLKJbqurg%7C1723536402%7C314e63000decb79f46b8ff255560b29f4d8c57352dad465b41977db4830b4c7e";
-        }
-
-        const msToken = randomMsToken(107);
-        const search = new URLSearchParams({
-            device_platform: "webapp",
-            aid: "6383",
-            channel: "channel_pc_web",
+    // 免 Cookie 详情接口：api.amemv.com（无签名、无游客 Cookie 依赖）。
+    // 视频返回 play_addr.uri + bit_rate，图集返回 images[].url_list（原图），实况另含 images[].video，三种类型通用。
+    if (typeof awemeId !== "string" || !/^[1-9][0-9]{15,19}$/.test(awemeId)) {
+        return {ok: false, reason: "请输入作品 aweme_id，而不是合集 mix_id"};
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+        const params = new URLSearchParams({
             aweme_id: awemeId,
-            msToken,
+            aid: "6383",
+            device_platform: "web",
+            version_code: "190500",
+            version_name: "19.5.0",
         });
-        const query = search.toString();
-        const aBogus = generate_a_bogus(query, DEFAULT_UA);
-
-        if (!aBogus) {
-            return {ok: false, reason: "a_bogus 签名失败"};
-        }
-
-        const finalUrl = `https://www.douyin.com/aweme/v1/web/aweme/detail/?${query}&a_bogus=${encodeURIComponent(
-            aBogus
-        )}`;
-
-        let body;
-        try {
-            body = await httpGet(finalUrl, [
-                ...defaultBrowserHeaders(`${refererBase}?previous_page=web_code_link`),
-                ["cookie", `ttwid=${ttwid}`],
-            ]);
-        } catch (error) {
-            lastFailureHint = safeErrorMessage(error);
-            continue;
-        }
-
-        let json;
-        try {
-            json = JSON.parse(body);
-        } catch {
-            lastFailureHint = "详情接口返回非 JSON（可能被 WAF 返回 HTML 或编码异常）";
-            continue;
-        }
-
-        if (!json || !json.aweme_detail) {
-            const apiMsg = json?.status_msg || json?.statusMsg || "";
-            if (typeof apiMsg === "string" && apiMsg) {
-                lastFailureHint = apiMsg;
-            } else if (json && "status_code" in json) {
-                lastFailureHint = `status_code=${json.status_code}，无 aweme_detail`;
-            } else {
-                lastFailureHint = "接口未返回 aweme_detail";
+        const response = await fetch(
+            `https://api.amemv.com/aweme/v1/aweme/detail/?${params.toString()}`,
+            {
+                method: "GET",
+                redirect: "follow",
+                headers: {
+                    "user-agent": MOBILE_UA,
+                    accept: "application/json, text/plain, */*",
+                },
+                signal: controller.signal,
             }
-            continue;
+        );
+        if (!response.ok) {
+            await response.body?.cancel().catch(() => {});
+            return {ok: false, reason: `详情接口 HTTP ${response.status}`};
         }
-
+        const json = await response.json().catch(() => null);
+        if (!json || typeof json !== "object" || Array.isArray(json) || typeof json.status_code !== "number") {
+            return {ok: false, reason: "详情接口缺少有效 status_code"};
+        }
+        if (json.status_code !== 0) {
+            return {ok: false, reason: `详情接口 status_code=${json.status_code}`};
+        }
+        const detail = json.aweme_detail;
+        if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
+            return {ok: false, reason: "详情接口未返回 aweme_detail（不能据此断言作品已删除）"};
+        }
+        if (String(detail.aweme_id || "") !== awemeId) {
+            return {ok: false, reason: "详情接口返回的作品 ID 不匹配"};
+        }
+        // 保留完整上游对象，继续交给原有媒体选取/格式化流程；此处不裁剪图文和 Live Photo。
         return {ok: true, detail: json};
+    } catch (error) {
+        return {
+            ok: false,
+            reason: controller.signal.aborted ? "详情请求超时" : `详情请求失败：${safeErrorMessage(error)}`,
+        };
+    } finally {
+        clearTimeout(timer);
     }
-
-    return {ok: false, reason: lastFailureHint || "请求失败"};
-}
-
-function defaultBrowserHeaders(referer) {
-    return [
-        ["accept", "application/json, text/plain, */*"],
-        ["accept-language", "zh-CN,zh;q=0.9,en;q=0.8"],
-        ["referer", referer],
-        ["user-agent", DEFAULT_UA],
-        ["sec-ch-ua", '"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"'],
-        ["sec-ch-ua-mobile", "?0"],
-        ["sec-ch-ua-platform", '"Windows"'],
-        ["sec-fetch-dest", "empty"],
-        ["sec-fetch-mode", "cors"],
-        ["sec-fetch-site", "same-origin"],
-    ];
-}
-
-async function getTtwid() {
-    const response = await fetch("https://ttwid.bytedance.com/ttwid/union/register/", {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-            "user-agent": DEFAULT_UA,
-        },
-        body: JSON.stringify({
-            region: "cn",
-            aid: 6383,
-            need_t: 1,
-            service: "www.douyin.com",
-            migrate_priority: 0,
-            cb_url_protocol: "https",
-            domain: ".douyin.com",
-        }),
-    }).catch(() => null);
-
-    if (!response) {
-        return null;
-    }
-
-    const setCookie = response.headers.get("set-cookie") || "";
-    const match = setCookie.match(/(?:^|,\s*)ttwid=([^;\s]+)/i);
-    return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function httpGet(url, headersList) {
-    const headers = new Headers();
-    for (const [key, value] of headersList) {
-        headers.set(key, value);
-    }
-
-    const response = await fetch(url, {
-        method: "GET",
-        redirect: "follow",
-        headers,
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    return response.text();
 }
 
 async function buildLegacyFormatData(detail, fallbackVideoId) {
@@ -971,15 +900,6 @@ function pickCover(detail) {
     return null;
 }
 
-function randomMsToken(length) {
-    const base = "ABCDEFGHIGKLMNOPQRSTUVWXYZabcdefghigklmnopqrstuvwxyz0123456789=";
-    let out = "";
-    for (let i = 0; i < length; i += 1) {
-        out += base.charAt(Math.floor(Math.random() * base.length));
-    }
-    return out;
-}
-
 function toHttps(url) {
     if (!url) {
         return null;
@@ -1001,476 +921,4 @@ function isObject(value) {
 
 function stringValue(value) {
     return typeof value === "string" ? value : value == null ? "" : String(value);
-}
-
-function rc4_encrypt(plaintext, key) {
-    const s = [];
-    for (let i = 0; i < 256; i += 1) {
-        s[i] = i;
-    }
-    let j = 0;
-    for (let i = 0; i < 256; i += 1) {
-        j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
-        const temp = s[i];
-        s[i] = s[j];
-        s[j] = temp;
-    }
-
-    let i = 0;
-    j = 0;
-    const cipher = [];
-    for (let k = 0; k < plaintext.length; k += 1) {
-        i = (i + 1) % 256;
-        j = (j + s[i]) % 256;
-        const temp = s[i];
-        s[i] = s[j];
-        s[j] = temp;
-        const t = (s[i] + s[j]) % 256;
-        cipher.push(String.fromCharCode(s[t] ^ plaintext.charCodeAt(k)));
-    }
-    return cipher.join("");
-}
-
-function le(e, r) {
-    return ((e << (r % 32)) | (e >>> (32 - (r % 32)))) >>> 0;
-}
-
-function de(e) {
-    if (e >= 0 && e < 16) {
-        return 2043430169;
-    }
-    if (e >= 16 && e < 64) {
-        return 2055708042;
-    }
-    throw new Error("invalid j for constant Tj");
-}
-
-function pe(e, r, t, n) {
-    if (e >= 0 && e < 16) {
-        return (r ^ t ^ n) >>> 0;
-    }
-    if (e >= 16 && e < 64) {
-        return ((r & t) | (r & n) | (t & n)) >>> 0;
-    }
-    throw new Error("invalid j for bool function FF");
-}
-
-function he(e, r, t, n) {
-    if (e >= 0 && e < 16) {
-        return (r ^ t ^ n) >>> 0;
-    }
-    if (e >= 16 && e < 64) {
-        return ((r & t) | (~r & n)) >>> 0;
-    }
-    throw new Error("invalid j for bool function GG");
-}
-
-class SM3 {
-    constructor() {
-        this.reg = [];
-        this.chunk = [];
-        this.size = 0;
-        this.reset();
-    }
-
-    reset() {
-        this.reg[0] = 1937774191;
-        this.reg[1] = 1226093241;
-        this.reg[2] = 388252375;
-        this.reg[3] = 3666478592;
-        this.reg[4] = 2842636476;
-        this.reg[5] = 372324522;
-        this.reg[6] = 3817729613;
-        this.reg[7] = 2969243214;
-        this.chunk = [];
-        this.size = 0;
-    }
-
-    write(input) {
-        const bytes =
-            typeof input === "string"
-                ? Array.from(
-                    encodeURIComponent(input).replace(/%([0-9A-F]{2})/g, (_, hex) =>
-                        String.fromCharCode(Number(`0x${hex}`))
-                    ),
-                    (ch) => ch.charCodeAt(0)
-                )
-                : input;
-
-        this.size += bytes.length;
-        let free = 64 - this.chunk.length;
-
-        if (bytes.length < free) {
-            this.chunk = this.chunk.concat(bytes);
-            return;
-        }
-
-        this.chunk = this.chunk.concat(bytes.slice(0, free));
-        while (this.chunk.length >= 64) {
-            this._compress(this.chunk);
-            if (free < bytes.length) {
-                this.chunk = bytes.slice(free, Math.min(free + 64, bytes.length));
-            } else {
-                this.chunk = [];
-            }
-            free += 64;
-        }
-    }
-
-    sum(input, format) {
-        if (input) {
-            this.reset();
-            this.write(input);
-        }
-        this._fill();
-
-        for (let i = 0; i < this.chunk.length; i += 64) {
-            this._compress(this.chunk.slice(i, i + 64));
-        }
-
-        let result;
-        if (format === "hex") {
-            result = "";
-            for (let i = 0; i < 8; i += 1) {
-                result += se(this.reg[i].toString(16), 8, "0");
-            }
-        } else {
-            result = new Array(32);
-            for (let i = 0; i < 8; i += 1) {
-                let c = this.reg[i];
-                result[4 * i + 3] = (c & 255) >>> 0;
-                c >>>= 8;
-                result[4 * i + 2] = (c & 255) >>> 0;
-                c >>>= 8;
-                result[4 * i + 1] = (c & 255) >>> 0;
-                c >>>= 8;
-                result[4 * i] = (c & 255) >>> 0;
-            }
-        }
-
-        this.reset();
-        return result;
-    }
-
-    _compress(t) {
-        if (t.length < 64) {
-            throw new Error("compress error: not enough data");
-        }
-
-        const w = new Array(132);
-        for (let i = 0; i < 16; i += 1) {
-            w[i] = (t[4 * i] << 24) | (t[4 * i + 1] << 16) | (t[4 * i + 2] << 8) | t[4 * i + 3];
-            w[i] >>>= 0;
-        }
-
-        for (let i = 16; i < 68; i += 1) {
-            let a = w[i - 16] ^ w[i - 9] ^ le(w[i - 3], 15);
-            a = a ^ le(a, 15) ^ le(a, 23);
-            w[i] = (a ^ le(w[i - 13], 7) ^ w[i - 6]) >>> 0;
-        }
-
-        for (let i = 0; i < 64; i += 1) {
-            w[i + 68] = (w[i] ^ w[i + 4]) >>> 0;
-        }
-
-        const state = this.reg.slice(0);
-        for (let i = 0; i < 64; i += 1) {
-            let ss1 = le((((le(state[0], 12) + state[4] + le(de(i), i)) >>> 0) & 0xffffffff) >>> 0, 7);
-            const ss2 = (ss1 ^ le(state[0], 12)) >>> 0;
-            let tt1 = pe(i, state[0], state[1], state[2]);
-            tt1 = (tt1 + state[3] + ss2 + w[i + 68]) >>> 0;
-            let tt2 = he(i, state[4], state[5], state[6]);
-            tt2 = (tt2 + state[7] + ss1 + w[i]) >>> 0;
-
-            state[3] = state[2];
-            state[2] = le(state[1], 9);
-            state[1] = state[0];
-            state[0] = tt1;
-            state[7] = state[6];
-            state[6] = le(state[5], 19);
-            state[5] = state[4];
-            state[4] = (tt2 ^ le(tt2, 9) ^ le(tt2, 17)) >>> 0;
-        }
-
-        for (let i = 0; i < 8; i += 1) {
-            this.reg[i] = (this.reg[i] ^ state[i]) >>> 0;
-        }
-    }
-
-    _fill() {
-        const totalBits = 8 * this.size;
-        let mod = this.chunk.push(128) % 64;
-
-        if (64 - mod < 8) {
-            mod -= 64;
-        }
-        while (mod < 56) {
-            this.chunk.push(0);
-            mod += 1;
-        }
-
-        for (let i = 0; i < 4; i += 1) {
-            const high = Math.floor(totalBits / 4294967296);
-            this.chunk.push((high >>> (8 * (3 - i))) & 255);
-        }
-        for (let i = 0; i < 4; i += 1) {
-            this.chunk.push((totalBits >>> (8 * (3 - i))) & 255);
-        }
-    }
-}
-
-function se(value, width, fill) {
-    let output = String(value);
-    while (output.length < width) {
-        output = fill + output;
-    }
-    return output;
-}
-
-function result_encrypt(long_str, num = null) {
-    const s_obj = {
-        s0: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-        s1: "Dkdpgh4ZKsQB80/Mfvw36XI1R25+WUAlEi7NLboqYTOPuzmFjJnryx9HVGcaStCe=",
-        s2: "Dkdpgh4ZKsQB80/Mfvw36XI1R25-WUAlEi7NLboqYTOPuzmFjJnryx9HVGcaStCe=",
-        s3: "ckdp1h4ZKsUB80/Mfvw36XIgR25+WQAlEi7NLboqYTOPuzmFjJnryx9HVGDaStCe",
-        s4: "Dkdpgh2ZmsQB80/MfvV36XI1R45-WUAlEixNLwoqYTOPuzKFjJnry79HbGcaStCe",
-    };
-
-    const constant = {
-        0: 16515072,
-        1: 258048,
-        2: 4032,
-        str: s_obj[num],
-    };
-
-    let result = "";
-    let round = 0;
-    let longInt = get_long_int(round, long_str);
-    for (let i = 0; i < (long_str.length / 3) * 4; i += 1) {
-        if (Math.floor(i / 4) !== round) {
-            round += 1;
-            longInt = get_long_int(round, long_str);
-        }
-
-        const key = i % 4;
-        let tempInt = 0;
-        switch (key) {
-            case 0:
-                tempInt = (longInt & constant[0]) >> 18;
-                result += constant.str.charAt(tempInt);
-                break;
-            case 1:
-                tempInt = (longInt & constant[1]) >> 12;
-                result += constant.str.charAt(tempInt);
-                break;
-            case 2:
-                tempInt = (longInt & constant[2]) >> 6;
-                result += constant.str.charAt(tempInt);
-                break;
-            case 3:
-                tempInt = longInt & 63;
-                result += constant.str.charAt(tempInt);
-                break;
-            default:
-                break;
-        }
-    }
-    return result;
-}
-
-function get_long_int(round, long_str) {
-    const offset = round * 3;
-    return (
-        (long_str.charCodeAt(offset) << 16) |
-        (long_str.charCodeAt(offset + 1) << 8) |
-        long_str.charCodeAt(offset + 2)
-    );
-}
-
-function gener_random(random, option) {
-    return [
-        ((random & 255 & 170) | (option[0] & 85)) >>> 0,
-        ((random & 255 & 85) | (option[0] & 170)) >>> 0,
-        (((random >> 8) & 255 & 170) | (option[1] & 85)) >>> 0,
-        (((random >> 8) & 255 & 85) | (option[1] & 170)) >>> 0,
-    ];
-}
-
-function generate_rc4_bb_str(
-    url_search_params,
-    user_agent,
-    window_env_str,
-    suffix = "cus",
-    Arguments = [0, 1, 14]
-) {
-    const sm3 = new SM3();
-    const start_time = Date.now();
-    const url_search_params_list = sm3.sum(sm3.sum(url_search_params + suffix));
-    const cus = sm3.sum(sm3.sum(suffix));
-    const ua = sm3.sum(
-        result_encrypt(
-            rc4_encrypt(user_agent, String.fromCharCode.apply(null, [0.00390625, 1, 14])),
-            "s3"
-        )
-    );
-    const end_time = Date.now();
-    const b = {
-        8: 3,
-        10: end_time,
-        15: {
-            aid: 6383,
-            pageId: 6241,
-            boe: false,
-            ddrt: 7,
-            paths: {
-                include: [{}, {}, {}, {}, {}, {}, {}],
-                exclude: [],
-            },
-            track: {
-                mode: 0,
-                delay: 300,
-                paths: [],
-            },
-            dump: true,
-            rpU: "",
-        },
-        16: start_time,
-        18: 44,
-        19: [1, 0, 1, 5],
-    };
-
-    b[20] = (b[16] >> 24) & 255;
-    b[21] = (b[16] >> 16) & 255;
-    b[22] = (b[16] >> 8) & 255;
-    b[23] = b[16] & 255;
-    b[24] = Math.floor(b[16] / 256 / 256 / 256 / 256);
-    b[25] = Math.floor(b[16] / 256 / 256 / 256 / 256 / 256);
-
-    b[26] = (Arguments[0] >> 24) & 255;
-    b[27] = (Arguments[0] >> 16) & 255;
-    b[28] = (Arguments[0] >> 8) & 255;
-    b[29] = Arguments[0] & 255;
-
-    b[30] = Math.floor(Arguments[1] / 256) & 255;
-    b[31] = Arguments[1] % 256;
-    b[32] = (Arguments[1] >> 24) & 255;
-    b[33] = (Arguments[1] >> 16) & 255;
-
-    b[34] = (Arguments[2] >> 24) & 255;
-    b[35] = (Arguments[2] >> 16) & 255;
-    b[36] = (Arguments[2] >> 8) & 255;
-    b[37] = Arguments[2] & 255;
-
-    b[38] = url_search_params_list[21];
-    b[39] = url_search_params_list[22];
-    b[40] = cus[21];
-    b[41] = cus[22];
-    b[42] = ua[23];
-    b[43] = ua[24];
-
-    b[44] = (b[10] >> 24) & 255;
-    b[45] = (b[10] >> 16) & 255;
-    b[46] = (b[10] >> 8) & 255;
-    b[47] = b[10] & 255;
-    b[48] = b[8];
-    b[49] = Math.floor(b[10] / 256 / 256 / 256 / 256);
-    b[50] = Math.floor(b[10] / 256 / 256 / 256 / 256 / 256);
-
-    b[51] = b[15].pageId;
-    b[52] = (b[15].pageId >> 24) & 255;
-    b[53] = (b[15].pageId >> 16) & 255;
-    b[54] = (b[15].pageId >> 8) & 255;
-    b[55] = b[15].pageId & 255;
-
-    b[56] = b[15].aid;
-    b[57] = b[15].aid & 255;
-    b[58] = (b[15].aid >> 8) & 255;
-    b[59] = (b[15].aid >> 16) & 255;
-    b[60] = (b[15].aid >> 24) & 255;
-
-    const window_env_list = [];
-    for (let i = 0; i < window_env_str.length; i += 1) {
-        window_env_list.push(window_env_str.charCodeAt(i));
-    }
-    b[64] = window_env_list.length;
-    b[65] = b[64] & 255;
-    b[66] = (b[64] >> 8) & 255;
-
-    b[69] = 0;
-    b[70] = 0;
-    b[71] = 0;
-
-    b[72] =
-        b[18] ^
-        b[20] ^
-        b[26] ^
-        b[30] ^
-        b[38] ^
-        b[40] ^
-        b[42] ^
-        b[21] ^
-        b[27] ^
-        b[31] ^
-        b[35] ^
-        b[39] ^
-        b[41] ^
-        b[43] ^
-        b[22] ^
-        b[28] ^
-        b[32] ^
-        b[36] ^
-        b[23] ^
-        b[29] ^
-        b[33] ^
-        b[37] ^
-        b[44] ^
-        b[45] ^
-        b[46] ^
-        b[47] ^
-        b[48] ^
-        b[49] ^
-        b[50] ^
-        b[24] ^
-        b[25] ^
-        b[52] ^
-        b[53] ^
-        b[54] ^
-        b[55] ^
-        b[57] ^
-        b[58] ^
-        b[59] ^
-        b[60] ^
-        b[65] ^
-        b[66] ^
-        b[70] ^
-        b[71];
-
-    let bb = [
-        b[18], b[20], b[52], b[26], b[30], b[34], b[58], b[38], b[40], b[53], b[42], b[21],
-        b[27], b[54], b[55], b[31], b[35], b[57], b[39], b[41], b[43], b[22], b[28], b[32],
-        b[60], b[36], b[23], b[29], b[33], b[37], b[44], b[45], b[59], b[46], b[47], b[48],
-        b[49], b[50], b[24], b[25], b[65], b[66], b[70], b[71],
-    ];
-
-    bb = bb.concat(window_env_list).concat(b[72]);
-    return rc4_encrypt(String.fromCharCode.apply(null, bb), String.fromCharCode.apply(null, [121]));
-}
-
-function generate_random_str() {
-    let random_str_list = [];
-    random_str_list = random_str_list.concat(gener_random(Math.random() * 10000, [3, 45]));
-    random_str_list = random_str_list.concat(gener_random(Math.random() * 10000, [1, 0]));
-    random_str_list = random_str_list.concat(gener_random(Math.random() * 10000, [1, 5]));
-    return String.fromCharCode.apply(null, random_str_list);
-}
-
-function generate_a_bogus(url_search_params, user_agent) {
-    const result_str =
-        generate_random_str() +
-        generate_rc4_bb_str(
-            url_search_params,
-            user_agent,
-            "1536|747|1536|834|0|30|0|0|1536|834|1536|864|1525|747|24|24|Win32"
-        );
-    return `${result_encrypt(result_str, "s4")}=`;
 }

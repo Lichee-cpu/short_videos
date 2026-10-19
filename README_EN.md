@@ -1,40 +1,31 @@
 <div align="center">
   <img width="100px" alt="logo" src="img/icon.png"/>
   <h1>Short Video Watermark Removal & Parsing API</h1>
-  <p><em>Source code for short video watermark removal and parsing interface</em></p>
+  <p><em>Multi-platform parsing · Cookie-free · Watermark-free direct links · Ready to deploy</em></p>
   <div>
-    <a href="https://github.com/jiuhunwl/short_videos/blob/main/LICENSE" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">
+    <a href="https://github.com/jiuhunwl/short_videos/blob/main/LICENSE">
       <img src="https://img.shields.io/github/license/jiuhunwl/short_videos" alt="License" />
     </a>
-    <a href="https://php.net" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">
-      <img src="https://img.shields.io/badge/PHP-8.0+-777BB4?style=flat&logo=php&logoColor=white" alt="PHP Version" />
+    <a href="https://php.net">
+      <img src="https://img.shields.io/badge/PHP-8.0%2B-777BB4?style=flat&logo=php&logoColor=white" alt="PHP Version" />
     </a>
-    <a href="https://github.com/jiuhunwl/short_videos" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">
+    <a href="https://github.com/jiuhunwl/short_videos">
       <img src="https://img.shields.io/github/stars/jiuhunwl/short_videos?style=social" alt="GitHub Stars" />
     </a>
   </div>
-  <br />
-  <div>
-    <a href="#about" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">About</a>
-    •
-    <a href="#important-notice" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Important Notice</a>
-    •
-    <a href="#features" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Features</a>
-    •
-    <a href="#supported-platforms" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Platforms</a>
-    •
-    <a href="#installation" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Installation</a>
-    •
-    <a href="#usage" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Usage</a>
-    •
-    <a href="#api-reference" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">API Reference</a>
-    •
-    <a href="#contributing" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Contributing</a>
-    •
-    <a href="#license" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">License</a>
-    •
-    <a href="#contact" style="text-decoration: none; color: #0366d6; transition: color 0.2s;">Contact</a>
-  </div>
+  <br/>
+  <p>
+    <a href="#-about">About</a> •
+    <a href="#-important-notice">Important Notice</a> •
+    <a href="#-features">Features</a> •
+    <a href="#-supported-platforms">Platforms</a> •
+    <a href="#-project-structure">Structure</a> •
+    <a href="#-installation">Installation</a> •
+    <a href="#-usage">Usage</a> •
+    <a href="#-api-reference">API Reference</a> •
+    <a href="#-contributing">Contributing</a> •
+    <a href="#-contact">Contact</a>
+  </p>
 </div>
 
 <div align="center">
@@ -47,35 +38,20 @@
 
 ---
 
-## 📋 Table of Contents
-
-- [About](#about)
-- [Important Notice](#important-notice)
-- [✨ Features](#features)
-- [🌐 Supported Platforms](#supported-platforms)
-- [📦 Installation](#installation)
-- [🚀 Usage](#usage)
-- [📖 API Reference](#api-reference)
-- [🤝 Contributing](#contributing)
-- [📄 License](#license)
-- [📮 Contact](#contact)
-
----
-
 ## 🎯 About
 
-This tool is designed to parse video links from various short video platforms and extract detailed information such as:
+This tool parses share links from major short video platforms and returns watermark-free direct links with full metadata:
 
-- Direct video URLs (without watermarks)
-- Cover images
-- Author information
-- Video metadata
+- **Watermark-free video / image-gallery / live-photo direct links** (Douyin supports original-quality `original` parsing)
+- **Original images** from galleries and image+video pairs for Live Photos
+- Cover images, author info, background music, duration, publish time and more
+- All responses are returned in structured JSON format for easy integration
 
-All responses are returned in structured JSON format for easy integration.
+> Douyin parsing uses a **cookie-free detail API** — no login, no cookie extraction required. Videos, galleries and live photos are all supported.
 
 ---
 
-## Important Notice
+## 📢 Important Notice
 
 This project is open-source software under the MIT License. Any individual or organization may use, modify, and
 distribute the source code in compliance with the license terms and applicable laws and regulations.
@@ -96,41 +72,88 @@ If any rights holder believes there is infringement or improper use, please cont
 
 ## ✨ Features
 
-- **Multi-Platform Support**: Parse video links from various short video platforms
-- **Watermark Removal**: Get direct video URLs without watermarks
-- **Fast Performance**: Quick response times for parsing requests
-- **Structured Data**: Returns well-formatted JSON data
-- **Easy Integration**: Simple API interface for seamless integration
-- **No Installation Required**: Can be used directly on any PHP server
+- **Multi-Platform Support**: Douyin / Kuaishou / Xiaohongshu / Bilibili / Weibo / Toutiao and more
+- **Cookie-Free Parsing**: Douyin videos, galleries and live photos require no login or cookies
+- **Original Quality**: Douyin resolves original quality via vid 302 redirect (`quality=original`) with automatic bitrate fallback
+- **All Content Types**: Videos, image galleries and live photos share one unified response contract
+- **Dual Runtime**: PHP API + Cloudflare Workers edition (Douyin) — pick whichever fits your deployment
+- **Aggregated Entry**: `api/sv.php` single aggregate endpoint — auto-detects the platform and dispatches to the matching per-platform API
+- **Zero-Dependency Deployment**: Pure PHP, no Composer required — upload and run
 
 ---
 
 ## 🌐 Supported Platforms
 
-| Platform                          | API File       | Status   |
-|-----------------------------------|----------------|----------|
-| **Douyin** (TikTok China)         | `douyin.php`   | ✅ Active |
-| **Kuaishou**                      | `kuaishou.php` | ✅ Active |
-| **Kuaishou Images**               | `ksimg.php`    | ✅ Active |
-| **Xiaohongshu** (Little Red Book) | `xhs.php`      | ✅ Active |
-| **Xiaohongshu Images**            | `xhsimg.php`   | ✅ Active |
-| **Xiaohongshu Live**              | `xhsjx.php`    | ✅ Active |
-| **Qishui Music**                  | `qsmusic.php`  | ✅ Active |
-| **Pipigx**                        | `pipigx.php`   | ✅ Active |
-| **Pipixia**                       | `ppxia.php`    | ✅ Active |
-| **Bilibili**                      | `bilibili.php` | ✅ Active |
-| **Weibo** (Interface Version)     | `weibo.php`    | ✅ Active |
-| **Weibo**                         | `weibo_v.php`  | ✅ Active |
+> Douyin content parsing ships as **two integrated editions only** — the PHP API and the Cloudflare Workers edition (videos / galleries / live photos behind one entry). Home-feed batch parsing is a separate API that requires a login cookie.
+
+| Platform | API File | Features | Login | Status |
+|----------|----------|----------|:---:|:---:|
+| **Douyin** Video/Gallery/Live Photo | `api/douyin/douyin.php` | Original-quality direct link, gallery original images, Live Photo, BGM, multi-gear backup links | Cookie-free | ✅ Active |
+| **Douyin** Cloudflare Workers Edition | `api/douyin-cloudflare workers/workers.js` | Original-quality direct link, gallery original images, Live Photo, BGM, multi-gear backup links | Cookie-free | ✅ Active |
+| **Douyin Home Feed** Batch Parsing | `api/douyin-home/home.php` | Batch home-feed list (feed API) | Login cookie required | ✅ Active |
+| **Kuaishou** | `api/kuaishou/ksjx.php` | Video/image direct links, cover, author info | Cookie-free | ✅ Active |
+| **Xiaohongshu** (Little Red Book) | `api/xiaohongshu/xhsjx.php` | Watermark-free video, gallery original images, Live Photo | Cookie-free | ✅ Active |
+| **Bilibili** | `api/bilibili/bilibili.php` | Video direct link, multi-part (P) list, duration, cover | Cookie-free | ✅ Active |
+| **Weibo** (Interface Version) | `api/weibo.php` | Multi-quality selection, backup links, engagement stats, cover | Cookie-free | ✅ Active |
+| **Weibo** (Spider Version) | `api/weibo_v.php` | Video direct link, cover | Cookie-free | ✅ Active |
+| **Toutiao** | `api/toutiao.php` | Watermark-free video, BGM, cover | Cookie-free | ✅ Active |
+| **Pipigx** (Pipi Comedy) | `api/pipigx.php` | Watermark-free video, cover | Cookie-free | ✅ Active |
+| **Pipixia** (Pipi Shrimp) | `api/ppxia.php` | Watermark-free video, gallery images, cover, author info | Cookie-free | ✅ Active |
+| **Zuiyou** | `api/zuiyou.php` | Watermark-free video, cover, author info | Cookie-free | ✅ Active |
+| **NetEase Cloud Music** | `api/wyy.py` (Python/Flask) | Song direct-link parsing | Cookie-free | ✅ Active |
+| **Doubao AI** Video/Chat Images | `api/doubao/video/api.php` | Watermark-free AI-generated video links | Cookie-free | ✅ Active |
+| **Jimeng AI** Video | `api/jimengai/index.php` | Watermark-free AI-generated video links | Cookie-free | ✅ Active |
+
+> If a direct video link returns **HTTP 403** (hotlink protection), proxy it through `api/svproxyurl.php` (PHP) or `cf_sv_proxy/worker.js` (Cloudflare Workers) — for the latter, see [cf_sv_proxy/README.md](cf_sv_proxy/README.md) for deployment and API docs.
 
 ---
 
-## 📦 Installation
+## 📦 Project Structure
+
+```
+short_videos/
+├── api/                            # Per-platform parsing APIs
+│   ├── douyin/                     # Douyin (cookie-free: video/gallery/live)
+│   │   ├── douyin.php              #   Entry point
+│   │   └── DouyinParser.php        #   Core parser (detail API + original quality 302)
+│   ├── douyin-cloudflare workers/     # Douyin Cloudflare Workers edition
+│   │   ├── workers.js              #   Worker script
+│   │   └── README.md               #   Deployment guide
+│   ├── douyin-home/                # Douyin home-feed batch parsing (login cookie required)
+│   │   ├── home.php                #   Entry point
+│   │   └── DouyinHomeParser.php    #   Home-feed parser
+│   ├── kuaishou/                   # Kuaishou
+│   ├── xiaohongshu/                # Xiaohongshu
+│   ├── bilibili/                   # Bilibili
+│   ├── doubao/                     # Doubao AI (video / chat image extraction)
+│   ├── jimengai/                   # Jimeng AI video
+│   ├── weibo.php / weibo_v.php     # Weibo (interface / spider)
+│   ├── toutiao.php                 # Toutiao
+│   ├── pipigx.php / ppxia.php      # Pipigx / Pipixia
+│   ├── zuiyou.php                  # Zuiyou
+│   ├── sv.php                      # Aggregate parser (auto platform detection, dispatches to per-platform APIs)
+│   ├── wyy.py                      # NetEase Cloud Music (Python/Flask)
+│   └── svproxyurl.php              # 403 hotlink proxy
+├── cf_sv_proxy/                    # 403 proxy (Cloudflare Workers edition, see README inside)
+├── img/                            # Documentation assets
+├── docs/                           # Specifications
+│   ├── 视频解析统一JSON格式3.0.md    #   Unified JSON format spec (Chinese)
+│   └── Unified-Video-Parsing-JSON-Format-3.0.md   #   Same spec (English)
+├── README.md / README_EN.md        # Documentation
+└── LICENSE                         # MIT License
+```
+
+---
+
+## 📥 Installation
 
 ### Requirements
 
-- **PHP 8.0** or higher
-- Web server (Apache/Nginx)
-- No additional dependencies required!
+| Item | Requirement |
+|------|-------------|
+| PHP | 8.0+ (curl & json extensions enabled) |
+| Web Server | Apache / Nginx |
+| Dependencies | None — no Composer needed |
 
 ### 1. Download the Code
 
@@ -141,7 +164,11 @@ cd short_videos
 
 ### 2. Deploy to Server
 
-Upload the PHP files to your web server. No installation or configuration needed!
+Deploy the whole directory to your web root (or any subdirectory). No configuration needed.
+
+### 3. Douyin Workers Edition (Optional)
+
+To run Douyin parsing on Cloudflare Workers, see [api/douyin-cloudflare workers/README.md](api/douyin-cloudflare%20workers/README.md) and deploy `workers.js`.
 
 ---
 
@@ -149,17 +176,31 @@ Upload the PHP files to your web server. No installation or configuration needed
 
 ### Basic Usage
 
-Access the API directly via URL:
+Access the API directly via URL with the share link (full share text supported):
 
 ```plaintext
-http://your-server-domain/api/xxx.php?url=VIDEO_LINK
+https://your-server-domain/api/douyin/douyin.php?url=VIDEO_LINK
 ```
 
 ### Example Request
 
-```plaintext
-https://api.bugpk.com/api/douyin.php?url=https://v.douyin.com/xxxx/
+```bash
+curl "https://api.bugpk.com/api/douyin/douyin.php?url=https://v.douyin.com/xxxx/"
 ```
+
+> The Douyin API accepts full share texts with copywriting, e.g.:
+> `?url=7.79 Copy and open Douyin... https://v.douyin.com/xxxx/`
+
+### Aggregate Parsing (Auto Dispatch)
+
+Use the aggregate endpoint `api/sv.php` when you don't want to distinguish platforms — it auto-detects the platform and forwards to the matching per-platform API:
+
+```bash
+curl "https://your-server-domain/api/sv.php?url=https://v.douyin.com/xxxx/"
+```
+
+- Platform keywords and per-platform API paths are maintained in the config block at the top of `api/sv.php`. By default it calls the per-platform APIs deployed **on the same site**; change a path to a full URL to forward to another host;
+- Aggregate forwarding requires a concurrency-capable web server (Nginx/Apache + PHP-FPM both work). The built-in `php -S` server is single-process and blocks self-requests — use it only for debugging single-platform APIs.
 
 ### Example Response
 
@@ -177,11 +218,15 @@ https://api.bugpk.com/api/douyin.php?url=https://v.douyin.com/xxxx/
       "avatar": "https://example.com/avatar.jpg"
     },
     "cover": "https://example.com/cover.jpg",
-    "url": "https://example.com/video.mp4",
-    "duration": 15000,
+    "url": "https://example.com/original_video.mp4",
+    "quality": "original",
+    "duration": 80.01,
+    "size": 1823456,
+    "size_label": "1.74MB",
+    "create_time": 1766503530,
+    "publish_time": "2025-12-23 23:25:30",
     "video_backup": [
-      "https://example.com/video_backup_1.mp4",
-      "https://example.com/video_backup_2.mp4"
+      "https://example.com/backup_1.mp4"
     ],
     "images": [],
     "live_photo": [],
@@ -191,85 +236,62 @@ https://api.bugpk.com/api/douyin.php?url=https://v.douyin.com/xxxx/
       "url": "https://example.com/music.mp3",
       "cover": "https://example.com/music_cover.jpg"
     },
-    "video_id": "7489328058390000000"
+    "video_id": "v0200fg10000xxxx"
   }
 }
 ```
-
-### 📱 Douyin Cookie Acquisition Tutorial
-
-**Important Note:** Douyin parsing may require the use of cookies to improve parsing success rate.
-
-#### Acquisition Steps:
-
-1. Open browser and visit Douyin web version
-2. Log in to your Douyin account
-3. Press F12 to open developer tools
-4. Switch to the Network tab
-5. Refresh the page and find a request
-6. Find the Cookie field in the request headers
-7. Copy the complete Cookie value
-
-#### Visual Tutorial:
-
-<div align="center">
-  <img src="img/dycookie.jpg" alt="Douyin Cookie Acquisition Tutorial" width="600" />
-  <p><em>Douyin Cookie acquisition steps diagram</em></p>
-</div>
 
 ---
 
 ## 📖 API Reference
 
+> 📘 The response data of every platform API follows a unified contract. See **[Unified Video Parsing JSON Format 3.0](docs/Unified-Video-Parsing-JSON-Format-3.0.md)** ([中文](docs/视频解析统一JSON格式3.0.md)) for the full field definitions and empty-value conventions.
+
 ### Request Parameters
 
-| Parameter | Type   | Description                          | Required |
-|-----------|--------|--------------------------------------|----------|
-| `url`     | String | Video link from short video platform | ✅ Yes    |
+| Parameter | Type   | Description                                                | Required |
+|-----------|--------|------------------------------------------------------------|:---:|
+| `url`     | String | Share link, or share text containing the link              | ✅ Yes    |
 
 ### Response Format
 
-| Field                | Type         | Description                                                      |
-|----------------------|--------------|------------------------------------------------------------------|
-| `code`               | Integer      | Business status code (`200` success, `400/404/500` failure)      |
-| `msg`                | String       | Response message (human-readable)                                |
-| `data`               | Object/Array | Payload (may be empty array on failure)                          |
-| `data.type`          | String       | Content type: `video` / `image` / `live` / `unknown`             |
-| `data.title`         | String       | Title (usually same as `desc`)                                   |
-| `data.desc`          | String       | Description text                                                 |
-| `data.author`        | Object       | Author object                                                    |
-| `data.author.name`   | String       | Author nickname                                                  |
-| `data.author.id`     | String       | Author unique identifier                                         |
-| `data.author.avatar` | String       | Author avatar URL                                                |
-| `data.cover`         | String       | Cover image URL                                                  |
-| `data.music`         | Object       | Background music object                                          |
-| `data.music.title`   | String       | Music title                                                      |
-| `data.music.author`  | String       | Music author                                                     |
-| `data.music.url`     | String       | Music direct URL                                                 |
-| `data.music.cover`   | String       | Music cover URL                                                  |
-| `data.duration`      | Integer/Null | Duration in milliseconds (can be `null`)                         |
-| `data.url`           | String/Null  | Main video URL (`type=video`)                                    |
-| `data.video_backup`  | Array        | Backup video URL list (`type=video`)                             |
-| `data.video_id`      | String       | Video ID (`type=video`)                                          |
-| `data.images`        | Array        | Image URL list (`type=image/live`)                               |
-| `data.live_photo`    | Array        | Live-photo list (`type=live`, each item has `image` and `video`) |
+| Field                | Type         | Description                                                        |
+|----------------------|--------------|--------------------------------------------------------------------|
+| `code`               | Integer      | Business status code (`200` success, `400/404/500` failure)        |
+| `msg`                | String       | Response message (human-readable)                                  |
+| `data`               | Object/Array | Payload (empty array on failure)                                   |
+| `data.type`          | String       | Content type: `video` / `image` / `live` / `unknown`               |
+| `data.title`         | String       | Title (usually same as `desc`)                                     |
+| `data.desc`          | String       | Description text                                                   |
+| `data.author`        | Object       | Author info (`name` / `id` / `avatar`)                             |
+| `data.cover`         | String       | Cover image URL                                                    |
+| `data.url`           | String/Null  | Watermark-free direct URL (`type=video`)                           |
+| `data.quality`       | String       | Quality: `original` for Douyin original, otherwise the bitrate gear|
+| `data.duration`      | Number/Null  | Duration in seconds (two decimals)                                 |
+| `data.size`          | Integer      | Main URL size in bytes (`0` when probe fails)                      |
+| `data.size_label`    | String       | Human-readable size (e.g. `1.74MB`)                                |
+| `data.create_time`   | Integer      | Publish timestamp in seconds                                       |
+| `data.publish_time`  | String       | Publish time (UTC+8, `Y-m-d H:i:s`)                                |
+| `data.video_backup`  | Array        | Backup video URL list (`type=video`)                               |
+| `data.video_id`      | String       | Video vid (`type=video`)                                           |
+| `data.images`        | Array        | Original image URL list (`type=image/live`)                        |
+| `data.live_photo`    | Array        | Live-photo list (`type=live`, each item has `image` and `video`)   |
+| `data.music`         | Object       | Background music (`title` / `author` / `url` / `cover`)            |
 
 ### Status Codes
 
-| Code  | Description                |
-|-------|----------------------------|
-| `200` | Parsing successful         |
-| `400` | Invalid request parameters |
-| `404` | Video not found            |
-| `500` | Server error               |
+| Code  | Description                     |
+|-------|---------------------------------|
+| `200` | Parsing successful              |
+| `400` | Invalid parameters / link       |
+| `404` | Content not found               |
+| `500` | Upstream request failed         |
 
 ---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
-
-### How to Contribute
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -281,8 +303,7 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see
-the [LICENSE](https://github.com/jiuhunwl/short_videos/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -330,234 +351,51 @@ If you find this project helpful, please consider supporting our work:
 
 ## 🏆 Sponsor List
 
-Thank you to the following generous supporters for your sponsorship! Your support is our motivation to keep improving!
+Thanks to all of our generous sponsors for keeping this project going!
 
-<div align="center">
-  <table style="border-collapse: collapse; margin: 25px auto; width: 95%; max-width: 900px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden;">
-    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-      <th style="border: none; padding: 16px; text-align: center; color: white; font-weight: 600; font-size: 1.05em;">No.</th>
-      <th style="border: none; padding: 16px; text-align: center; color: white; font-weight: 600; font-size: 1.05em;">Sponsor</th>
-      <th style="border: none; padding: 16px; text-align: center; color: white; font-weight: 600; font-size: 1.05em;">Amount</th>
-      <th style="border: none; padding: 16px; text-align: center; color: white; font-weight: 600; font-size: 1.05em;">Message</th>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">1</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">梦安</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥60.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">赞助用于开通网易云音...</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">2</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">aゞ不忘初心,方得始终</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥100.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">3</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">说你愿意</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥58.87</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">大义，无条件支持！...</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">4</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">apivl.yrain.top | 夜雨api</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #ff6b6b; font-weight: bold; font-size: 1.1em;">¥6.66</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">5</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">周路遥</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥3.68</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">6</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">LinBai</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥14.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">7</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">吃馍</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥57.20</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">8</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">Chovy</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥5.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">9</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">芊艺Yqin</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥18.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">祝BugPK越来越好</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">10</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">夜猫子</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥9.99</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持一下</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">11</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">孜恋</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥8.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">希望可以继续下去</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">12</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">墨白</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥30.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">支持！</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">13</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">sky</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥107.76</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">14</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">笑而不語</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥8.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">15</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">Jasper</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥100.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">16</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">弘</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥18.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">17</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">零号潮玩舱</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥6.66</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">18</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">乐花趣</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥5.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">19</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">天行健</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥9.99</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">20</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">Zack</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥68.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">21</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">人民群众</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥100.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">22</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">小渡api</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥10.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">23</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">鑫</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥5.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">24</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">Y</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥742.64</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">25</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">曲奇</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥8.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">26</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">大圣</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥8.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">27</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">yyzz</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥811.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">28</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">你好</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥8.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; padding: 14px; text-align: center; font-weight: 500;">29</td>
-      <td style="border: none; padding: 14px; text-align: center;">*1</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥18.80</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; padding: 14px; text-align: center; font-weight: 500;">30</td>
-      <td style="border: none; padding: 14px; text-align: center;">*豐</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥10.00</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">31</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">社恐的王同学</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥38.88</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; padding: 14px; text-align: center; font-weight: 500;">32</td>
-      <td style="border: none; padding: 14px; text-align: center;">小邪</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥1364.00</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">33</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">little</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥100.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">34</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">走过十里坡</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥199.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #ffffff;">
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; font-weight: 500;">35</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center;">ɴᴏᴡᴏʀɴᴇᴠᴇʀ</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #dc3545; font-weight: bold; font-size: 1.1em;">¥200.00</td>
-      <td style="border: none; border-bottom: 1px solid #e9ecef; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-    <tr style="background-color: #f8f9fa;">
-      <td style="border: none; padding: 14px; text-align: center; font-weight: 500;">36</td>
-      <td style="border: none; padding: 14px; text-align: center;">路飞</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1em;">¥88.00</td>
-      <td style="border: none; padding: 14px; text-align: center; color: #495057;">Support!</td>
-    </tr>
-  </table>
-</div>
+<details>
+<summary><strong>Expand full sponsor list (36 sponsors)</strong></summary>
+
+| # | Sponsor | Amount | Message |
+|:---:|:---:|:---:|:---:|
+| 1 | 梦安 | ¥60.00 | — |
+| 2 | aゞ不忘初心,方得始终 | ¥100.00 | — |
+| 3 | 说你愿意 | ¥58.87 | — |
+| 4 | apivl.yrain.top \| 夜雨api | ¥6.66 | — |
+| 5 | 周路遥 | ¥3.68 | — |
+| 6 | LinBai | ¥14.00 | — |
+| 7 | 吃馍 | ¥57.20 | — |
+| 8 | Chovy | ¥5.00 | — |
+| 9 | 芊艺Yqin | ¥18.88 | — |
+| 10 | 夜猫子 | ¥9.99 | — |
+| 11 | 孜恋 | ¥8.00 | — |
+| 12 | 墨白 | ¥30.00 | — |
+| 13 | sky | ¥107.76 | — |
+| 14 | 笑而不語 | ¥8.88 | — |
+| 15 | Jasper | ¥100.00 | — |
+| 16 | 弘 | ¥18.88 | — |
+| 17 | 零号潮玩舱 | ¥6.66 | — |
+| 18 | 乐花趣 | ¥5.00 | — |
+| 19 | 天行健 | ¥9.99 | — |
+| 20 | Zack | ¥68.00 | — |
+| 21 | 人民群众 | ¥100.00 | — |
+| 22 | 小渡api | ¥10.00 | — |
+| 23 | 鑫 | ¥5.00 | — |
+| 24 | Y | ¥742.64 | — |
+| 25 | 曲奇 | ¥8.88 | — |
+| 26 | 大圣 | ¥8.88 | — |
+| 27 | yyzz | ¥811.00 | — |
+| 28 | 你好 | ¥8.00 | — |
+| 29 | *1 | ¥18.80 | — |
+| 30 | *豐 | ¥10.00 | — |
+| 31 | 社恐的王同学 | ¥38.88 | — |
+| 32 | 小邪 | ¥1364.00 | — |
+| 33 | little | ¥100.00 | — |
+| 34 | 走过十里坡 | ¥199.00 | — |
+| 35 | ɴᴏᴡᴏʀɴᴇᴠᴇʀ | ¥200.00 | — |
+| 36 | 路飞 | ¥88.00 | — |
+
+</details>
 
 ---
 
@@ -568,7 +406,7 @@ Thank you to the following generous supporters for your sponsorship! Your suppor
 ---
 
 <div align="center">
-  <p>⭐ If you find this project useful, please give it a star!</p>
+  <p>⭐ If this project helps you, please give it a Star!</p>
 </div>
 
 ---

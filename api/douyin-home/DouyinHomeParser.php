@@ -6,9 +6,9 @@
  * @email: admin@bugpk.com
  * @blog: www.jiuhunwl.cn
  * @Api: api.bugpk.com
- * @tip: 抖音主页解析
+ * @tip: 抖音主页解析（原 dyzy，需登录 Cookie 调用 feed 接口）
  */
-class DouyinParser
+class DouyinHomeParser
 {
     private $cookie;
     private $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
