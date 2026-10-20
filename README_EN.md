@@ -75,6 +75,7 @@ If any rights holder believes there is infringement or improper use, please cont
 - **Multi-Platform Support**: Douyin / Kuaishou / Xiaohongshu / Bilibili / Weibo / Toutiao and more
 - **Cookie-Free Parsing**: Douyin videos, galleries and live photos require no login or cookies
 - **Original Quality**: Douyin resolves original quality via vid 302 redirect (`quality=original`) with automatic bitrate fallback
+- **Normalized Direct URLs**: Douyin video URLs are automatically given `mime_type=video_mp4` (never duplicated) so players and downloaders recognize the payload as MP4
 - **All Content Types**: Videos, image galleries and live photos share one unified response contract
 - **Dual Runtime**: PHP API + Cloudflare Workers edition (Douyin) — pick whichever fits your deployment
 - **Aggregated Entry**: `api/sv.php` single aggregate endpoint — auto-detects the platform and dispatches to the matching per-platform API
@@ -265,7 +266,7 @@ curl "https://your-server-domain/api/sv.php?url=https://v.douyin.com/xxxx/"
 | `data.desc`          | String       | Description text                                                   |
 | `data.author`        | Object       | Author info (`name` / `id` / `avatar`)                             |
 | `data.cover`         | String       | Cover image URL                                                    |
-| `data.url`           | String/Null  | Watermark-free direct URL (`type=video`)                           |
+| `data.url`           | String/Null  | Watermark-free direct URL (`type=video`); Douyin URLs carry `mime_type=video_mp4` |
 | `data.quality`       | String       | Quality: `original` for Douyin original, otherwise the bitrate gear|
 | `data.duration`      | Number/Null  | Duration in seconds (two decimals)                                 |
 | `data.size`          | Integer      | Main URL size in bytes (`0` when probe fails)                      |

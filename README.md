@@ -70,6 +70,7 @@
 - **多平台支持**：抖音 / 快手 / 小红书 / 哔哩哔哩 / 微博 / 今日头条等主流平台
 - **免 Cookie 解析**：抖音视频、图集、实况均无需登录与 Cookie 配置
 - **原画直链**：抖音自动通过 vid 302 解析原画（`quality=original`），多档码率自动降级
+- **直链规范**：抖音视频直链自动补齐 `mime_type=video_mp4`（已存在则不重复追加），便于播放器与下载器直接识别为 MP4
 - **类型全覆盖**：短视频、图文图集、实况（Live Photo）统一契约输出
 - **双运行时**：PHP 接口 + Cloudflare Workers 版（抖音），按部署环境任选
 - **聚合分发**：`api/sv.php` 单入口聚合，自动识别平台并转发到对应单平台接口
@@ -260,7 +261,7 @@ curl "https://你的服务器地址/api/sv.php?url=https://v.douyin.com/xxxx/"
 | `data.desc` | 字符串 | 描述文本 |
 | `data.author` | 对象 | 作者信息（`name` / `id` / `avatar`） |
 | `data.cover` | 字符串 | 封面图 URL |
-| `data.url` | 字符串/null | 无水印直链（`type=video` 时返回） |
+| `data.url` | 字符串/null | 无水印直链（`type=video` 时返回）；抖音直链已补齐 `mime_type=video_mp4` |
 | `data.quality` | 字符串 | 画质：抖音原画为 `original`，其余返回码率档位名 |
 | `data.duration` | 数值/null | 视频时长（秒，保留两位小数） |
 | `data.size` | 整数 | 主直链字节大小（探测失败为 `0`） |
