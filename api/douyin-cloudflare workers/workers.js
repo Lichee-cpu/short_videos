@@ -495,7 +495,7 @@ async function buildLegacyFormatData(detail, fallbackVideoId) {
         const vidMap = await resolveVidBatch(liveCandidates.map((item) => item.vid));
         for (const item of liveCandidates) {
             const resolved = item.vid ? vidMap.get(item.vid) : null;
-            result.live_photo.push({image: item.image, video: resolved || item.fallbackUrl});
+            result.live_photo.push({image: item.image, video: ensureVideoMimeType(resolved || item.fallbackUrl)});
         }
 
         if (result.live_photo.length) {
@@ -524,6 +524,9 @@ async function buildLegacyFormatData(detail, fallbackVideoId) {
             result.quality = videoInfo.gearName;
         }
 
+        // 补齐 mime_type=video_mp4；主地址先归一，保证下面去重比较口径一致
+        main = ensureVideoMimeType(main);
+
         if (main) {
             result.url = main;
             result.size = await probeVideoSize(main);
@@ -532,7 +535,7 @@ async function buildLegacyFormatData(detail, fallbackVideoId) {
 
         const backups = [];
         for (const candidate of videoInfo.backup) {
-            const converted = toHttps(candidate.replace(/playwm/g, "play"));
+            const converted = ensureVideoMimeType(toHttps(candidate.replace(/playwm/g, "play")));
             if (converted && converted !== result.url && !backups.includes(converted)) {
                 backups.push(converted);
             }
@@ -921,4 +924,39 @@ function isObject(value) {
 
 function stringValue(value) {
     return typeof value === "string" ? value : value == null ? "" : String(value);
+}
+
+// 补齐视频直链的 mime_type=video_mp4（抖音 CDN 约定参数）：已存在该参数则原样返回。
+// 只对 http(s) 地址生效；只做字符串追加，不用 URL 对象重写查询串——
+// 抖音 CDN 直链带签名参数，重写会改变参数顺序与编码，可能破坏签名。
+function ensureVideoMimeType(url) {
+    const value = stringValue(url);
+    if (!value || !/^https?:\/\//i.test(value)) {
+        return value;
+    }
+
+    // fragment 不参与查询串判断，追加时要放在 fragment 之前
+    const hashIndex = value.indexOf("#");
+    const base = hashIndex === -1 ? value : value.slice(0, hashIndex);
+    const fragment = hashIndex === -1 ? "" : value.slice(hashIndex);
+
+    const questionIndex = base.indexOf("?");
+    if (questionIndex !== -1) {
+        for (const pair of base.slice(questionIndex + 1).split("&")) {
+            if (safeDecode(pair.split("=")[0]) === "mime_type") {
+                return value;
+            }
+        }
+        return `${base}&mime_type=video_mp4${fragment}`;
+    }
+
+    return `${base}?mime_type=video_mp4${fragment}`;
+}
+
+function safeDecode(value) {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
 }

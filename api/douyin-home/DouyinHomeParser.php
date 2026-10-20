@@ -301,7 +301,7 @@ class DouyinHomeParser
             if (isset($aweme['video']['cover']['url_list'][0])) {
                 $item['cover'] = $aweme['video']['cover']['url_list'][0];
             }
-            $item['url'] = $this->findVideoUrl($aweme);
+            $item['url'] = $this->ensureVideoMimeType($this->findVideoUrl($aweme));
             if (isset($aweme['video']['duration'])) {
                 $item['duration'] = $aweme['video']['duration'] / 1000;
             }
@@ -359,5 +359,35 @@ class DouyinHomeParser
         }
 
         return '';
+    }
+
+    /**
+     * 补齐视频直链的 mime_type=video_mp4（抖音 CDN 约定参数）
+     *
+     * 仅对 http(s) 地址生效；已存在 mime_type 参数则原样返回；
+     * 无查询串用 ? 拼接，已有查询串用 &；带 fragment 时追加到 fragment 之前。
+     */
+    private function ensureVideoMimeType($url)
+    {
+        // 空安全字符串转换，与 DouyinParser::strv / workers 版 stringValue 语义保持一致
+        $url = is_string($url) ? $url : ($url === null ? '' : (string)$url);
+        if ($url === '' || stripos($url, 'http') !== 0) {
+            return $url;
+        }
+
+        // fragment 不参与查询串判断，追加时要放在 fragment 之前
+        $hashPos = strpos($url, '#');
+        $base = $hashPos === false ? $url : substr($url, 0, $hashPos);
+        $fragment = $hashPos === false ? '' : substr($url, $hashPos);
+
+        $query = parse_url($base, PHP_URL_QUERY);
+        if (is_string($query) && $query !== '') {
+            parse_str($query, $params);
+            if (array_key_exists('mime_type', $params)) {
+                return $url;
+            }
+        }
+
+        return $base . (strpos($base, '?') !== false ? '&' : '?') . 'mime_type=video_mp4' . $fragment;
     }
 }
